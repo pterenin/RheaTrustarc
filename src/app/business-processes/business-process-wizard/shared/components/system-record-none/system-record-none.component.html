@@ -1,0 +1,28 @@
+<div
+  id="no-system-record-selected"
+  class="d-flex justify-content-center align-items-center animated fadeIn"
+>
+  <div class="text-center">
+    <strong class="d-block mt-5">
+      <!-- [i18n-tobeinternationalized] -->
+      Add and configure system records used in this business process.
+    </strong>
+    <span class="d-block text-black-50">
+      <!-- [i18n-tobeinternationalized] -->
+      You can start adding it from the available system records on the left.
+    </span>
+    <span class="d-block text-black-50">
+      <!-- [i18n-tobeinternationalized] -->
+      or
+    </span>
+    <button
+      class="mt-1"
+      taButton
+      taType="secondary"
+      (click)="handleAddSystem()"
+    >
+      <!-- [i18n-tobeinternationalized] -->
+      Add New System Record
+    </button>
+  </div>
+</div>

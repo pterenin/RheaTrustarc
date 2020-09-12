@@ -1,0 +1,87 @@
+@import 'variables';
+
+:host {
+  display: block;
+  .col-3 {
+    max-width: 200px;
+    min-height: calc(100vh - 122px);
+    z-index: 2;
+  }
+  .col-3-no-breadcrumb {
+    max-width: 200px;
+    min-height: calc(100vh - 72px);
+    z-index: 2;
+  }
+
+  #content-container {
+    min-height: calc(100vh - 162px);
+    margin-bottom: -4px;
+  }
+
+  ta-breadcrumb {
+    padding-bottom: 0 !important;
+  }
+
+  .breadcrumbs-hidden {
+    #content-container {
+      min-height: calc(100vh - 98px);
+      margin-bottom: -4px;
+    }
+  }
+}
+
+/* THIS GROUP OF CSS (Z-INDEX) NEEDS TO BE REMOVED AS SOON THE UI TOOLKIT PAGINATION IS UPDATED */
+:host ::ng-deep {
+  ta-pagination {
+    .page-item.active {
+      a.page-link {
+        z-index: 0;
+      }
+    }
+  }
+}
+
+:host ::ng-deep {
+  ta-breadcrumb {
+    .breadcrumb-item {
+      a {
+        &:hover {
+          text-decoration: none;
+        }
+      }
+    }
+  }
+
+  /**
+   * THIS SECTION IS MANUAL CSS DISABLED OF ELEMENT
+   * WHILE RE-INDEX IS IN PROGRESS
+   */
+  .reindexing {
+    .reindex,
+    .ta-table-toolbar-filter,
+    [tafield='status'],
+    [tafield='currentRiskIndicator'],
+    [tafield='riskLevel'],
+    [tafield='linkedBPCount'] {
+      pointer-events: none;
+    }
+
+    button.reindex,
+    .ta-table-toolbar-filter {
+      opacity: 0.2;
+    }
+
+    [tafield='status'],
+    [tafield='currentRiskIndicator'],
+    [tafield='riskLevel'],
+    [tafield='linkedBPCount'] {
+      ta-icon {
+        opacity: 0.2;
+      }
+    }
+
+    .ta-table-column-resize {
+      pointer-events: all;
+    }
+  }
+}

@@ -1,0 +1,27 @@
+<!-- Page wrapper -->
+<div
+  id="wrapper"
+  *ngIf="appReady"
+  class="fadeInApp"
+  [class.breadcrumbs-hidden]="!showBreadCrumb"
+  [class.reindexing]="isReIndexing"
+>
+  <!-- Breadcrumbs -->
+  <div *ngIf="showBreadCrumb">
+    <ta-breadcrumb></ta-breadcrumb>
+  </div>
+  <div class="row no-gutters">
+    <!-- Content and router outlet -->
+    <div class="col">
+      <section id="content-container" role="main">
+        <router-outlet></router-outlet>
+      </section>
+
+      <!-- TrustArc Footer -->
+      <ta-footer *ngIf="showFooter"></ta-footer>
+    </div>
+  </div>
+</div>
+
+<!-- Global toast container -->
+<ta-toast></ta-toast>

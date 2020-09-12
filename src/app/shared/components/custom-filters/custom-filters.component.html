@@ -1,0 +1,305 @@
+<div class="custom-filters">
+  <div class="main-container" [ngClass]="{ loading: isLoading }">
+    <div taDropdown autoClose="outside" class="add-filter">
+      <a class="add-filter" taDropdownToggle id="filteroptions">
+        <button taButton type="button" taType="circle" id="addFilters">
+          <ta-icon icon="plus" color="#fff"></ta-icon>
+        </button>
+        <!--- [i18n-tobeinternationalized] -->
+        <span>More Filters</span>
+      </a>
+      <div
+        taDropdownMenu
+        aria-labelledby="filteroptions"
+        *ngIf="recordType != 'INV_ALL'"
+      >
+        <!-- TODO: Make section of filters name dinamic, backend should provide a filter type -->
+        <strong class="dropdown-item black" *ngIf="recordType === 'INV_ALL'"
+          >Third Party Filters</strong
+        >
+        <div class="dropdown-item black">
+          <ta-checkbox
+            (click)="allFiltersClick($event)"
+            [checked]="isAllSelected()"
+            [indeterminate]="isIndeterminate()"
+          >
+            Select All ({{ selectedFilterTypes.length }} of
+            {{ filterTypes.length }})
+          </ta-checkbox>
+        </div>
+        <div class="dropdown-item black" *ngFor="let filter of filterTypes">
+          <ta-checkbox
+            (change)="onFilterTypeClick(filter)"
+            [(ngModel)]="filter.selected"
+          >
+            {{ filter.name }}
+          </ta-checkbox>
+        </div>
+      </div>
+
+      <div
+        taDropdownMenu
+        aria-labelledby="filteroptions"
+        class="inventroy-filter-container"
+        *ngIf="recordType === 'INV_ALL'"
+      >
+        <!--- [i18n-tobeinternationalized] -->
+        <!-- TODO: Make section of filters name dinamic, backend should provide a filter type -->
+        <div
+          class="inventroy-filter-column"
+          *ngFor="let category of categorizedFilterTypes"
+        >
+          <strong class="dropdown-item black">{{
+            category[0].category || 'Third Party Filters'
+          }}</strong>
+          <div class="dropdown-item black" *ngFor="let filter of category">
+            <ta-checkbox
+              (change)="onFilterTypeClick(filter)"
+              [(ngModel)]="filter.selected"
+            >
+              {{ filter.name }}
+            </ta-checkbox>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ta-selected-filter-type
+      *ngFor="let filter of selectedFilterTypes"
+      [filterType]="filter"
+      (removeFilterType)="removeFilterType($event)"
+      [getFilterOptions]="getFilterOptions"
+      (filterOptionChanged)="filterOptionChanged($event)"
+    ></ta-selected-filter-type>
+    <span
+      class="spinner-border spinner-border-sm mr-2 text-primary"
+      role="status"
+      aria-hidden="true"
+      *ngIf="isLoading"
+    ></span>
+  </div>
+  <div class="toolbar">
+    <div
+      class="custom-filter"
+      taDropdown
+      *ngIf="recordType != 'INV_ALL'"
+      (openChange)="resetAllEditMods()"
+      placement="bottom-right"
+      class="my-filters"
+    >
+      <!--- [i18n-tobeinternationalized] -->
+      <button
+        taDropdownToggle
+        taButton
+        [disabled]="!filterViewList || !filterViewList.length"
+        taType="flat"
+      >
+        Saved Filters
+        <ta-icon [icon]="'chevron-down'" height="10"></ta-icon>
+      </button>
+      <div
+        taDropdownMenu
+        aria-labelledby="filteroptions"
+        class="my-filters-options"
+      >
+        <div
+          *ngFor="let filterView of filterViewList"
+          class="dropdown-item"
+          (click)="selectFilterView(filterView)"
+        >
+          <span
+            *ngIf="!filterView.editMode"
+            tooltipTextAlign="left"
+            container="body"
+            [taTooltip]="filterView.name"
+            [placement]="['top', 'auto']"
+            tooltipTheme="light"
+          >
+            {{ filterView.name }}
+          </span>
+          <form [formGroup]="editFilterForm" *ngIf="filterView.editMode">
+            <input
+              class="form-control"
+              formControlName="editedFilterName"
+              (keydown.enter)="updateFilterViewName(filterView)"
+              (keydown.esc)="
+                $event.preventDefault();
+                $event.stopPropagation();
+                cancelEdit(filterView, $event)
+              "
+              type="text"
+              [ngClass]="{
+                'is-invalid':
+                  editedFilterName.invalid && editedFilterName.touched
+              }"
+            />
+          </form>
+          <i class="ta ta-trash" (click)="deleteFilter($event, filterView)"></i>
+          <i
+            class="ta ta-edit"
+            (click)="editFilterView($event, filterView)"
+          ></i>
+          <div
+            class="errors"
+            *ngIf="editedFilterName.errors && filterView.editMode"
+          >
+            <div *ngIf="editedFilterName.errors?.maxlength" class="text-danger">
+              <!-- [i18n-tobeinternationalized] -->
+              <ta-icon
+                icon="error-circle"
+                color="currentColor"
+                height="16"
+              ></ta-icon>
+              <span>
+                The name must be less than 255 characters.
+              </span>
+            </div>
+            <div
+              *ngIf="
+                editedFilterName.errors?.alreadyExists &&
+                editedFilterName.touched
+              "
+              class="text-danger"
+            >
+              <!-- [i18n-tobeinternationalized] -->
+              <ta-icon
+                icon="error-circle"
+                color="currentColor"
+                height="16"
+              ></ta-icon>
+              <span>
+                This filter name is already in use, please change name.
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      taDropdown
+      #saveDrop
+      *ngIf="recordType != 'INV_ALL'"
+      placement="bottom-right"
+      class="d-inline-block save-drop"
+    >
+      <button
+        taDropdownToggle
+        taButton
+        taType="flat"
+        *ngIf="!selectedFilterViewExists()"
+        (click)="saveAsNew($event)"
+        [disabled]="!selectedFilterTypes.length"
+      >
+        <!--- [i18n-tobeinternationalized] -->
+        Save
+      </button>
+      <button
+        taDropdownToggle
+        taButton
+        *ngIf="selectedFilterViewExists()"
+        taType="flat"
+        [disabled]="!selectedFilterTypes.length"
+      >
+        <!--- [i18n-tobeinternationalized] -->
+        Save<i class="ta ta-chevron-down"></i>
+      </button>
+      <div
+        taDropdownMenu
+        aria-labelledby="dropdownBasic1"
+        *ngIf="selectedFilterView && selectedFilterView.id"
+      >
+        <div
+          class="dropdown-item"
+          (click)="updateFilter()"
+          class="dropdown-item"
+          taType="primary"
+        >
+          <!--- [i18n-tobeinternationalized] -->
+          Save & Update
+        </div>
+        <div
+          class="dropdown-item"
+          (click)="saveAsNew($event)"
+          class="dropdown-item"
+          taType="primary"
+        >
+          <!--- [i18n-tobeinternationalized] -->
+          Save as New
+        </div>
+      </div>
+
+      <div
+        taDropdownMenu
+        aria-labelledby="dropdownBasic1"
+        *ngIf="!selectedFilterView"
+      >
+        <form [formGroup]="newFilterForm" class="filter-name-form" novalidate>
+          <div class="form-group mb-3">
+            <label for="fullName">Filter Name*</label>
+            <input
+              class="form-control"
+              formControlName="filterName"
+              type="text"
+              placeholder="Enter a filter name"
+              [ngClass]="{
+                'is-invalid': filterName.invalid && filterName.touched
+              }"
+            />
+
+            <div *ngIf="filterName.errors?.maxlength" class="text-danger">
+              <!-- [i18n-tobeinternationalized] -->
+              <ta-icon
+                icon="error-circle"
+                color="currentColor"
+                height="16"
+              ></ta-icon>
+              <span>
+                The name must be less than 255 characters.
+              </span>
+            </div>
+            <div *ngIf="filterName.errors?.alreadyExists" class="text-danger">
+              <!-- [i18n-tobeinternationalized] -->
+              <ta-icon
+                icon="error-circle"
+                color="currentColor"
+                height="16"
+              ></ta-icon>
+              <span>
+                This filter name is already in use, please change name.
+              </span>
+            </div>
+          </div>
+          <button
+            taButton
+            taType="primary"
+            class="mr-1 btn-sm"
+            (click)="saveFilter()"
+            [disabled]="filterName.invalid"
+          >
+            <!--- [i18n-tobeinternationalized] -->
+            Save
+          </button>
+          <button
+            taButton
+            taType="flat"
+            (click)="$event.stopPropagation(); saveDrop.close()"
+          >
+            Cancel
+          </button>
+        </form>
+      </div>
+    </div>
+    <!--- [i18n-tobeinternationalized] -->
+    <button taButton taType="flat" (click)="clearFilters()" class="clear-btn">
+      Clear
+    </button>
+    <button
+      (click)="applyFilters()"
+      taButton
+      taType="flat"
+      [disabled]="!isFiltersDirty"
+    >
+      <!--- [i18n-tobeinternationalized] -->
+      Apply Filters
+    </button>
+  </div>
+</div>

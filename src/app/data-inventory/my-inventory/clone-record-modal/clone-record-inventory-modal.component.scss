@@ -1,0 +1,9 @@
+@import 'variables';
+
+:host {
+  label[for='bp-name'] {
+    span {
+      color: $red;
+    }
+  }
+}

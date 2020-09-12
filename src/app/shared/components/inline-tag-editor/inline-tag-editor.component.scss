@@ -1,0 +1,83 @@
+@import 'variables';
+
+.edit-icon {
+  opacity: 0;
+  color: $gray-900;
+  padding: 2px;
+}
+
+.tag-hover:hover {
+  .edit-icon {
+    opacity: 1;
+  }
+}
+.tag-name {
+  white-space: nowrap;
+  min-height: 19px;
+  float: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tag-hover {
+  padding-left: 0.9rem;
+  padding-right: 1rem;
+}
+.click-through {
+  pointer-events: none;
+}
+.tag-pop-content {
+  top: 40px !important;
+  padding-left: 5px !important;
+  padding-right: 5px !important;
+  width: 250px;
+  height: auto;
+
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+.tag-pop-title {
+  height: 32px;
+  padding: 9px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid $gray-500;
+  h3 {
+    font-size: 12px;
+    font-weight: bold;
+  }
+}
+
+.tag-item-trunc {
+  display: inline-block;
+  width: 45px;
+  max-width: 45px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tag-item {
+  display: inline-block;
+}
+
+.tag-more {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdown-menu-items {
+  height: 110px;
+  overflow-y: scroll;
+}
+.contract {
+  height: 90px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
+.selected-edit {
+  visibility: visible !important;
+  opacity: 100;
+  color: $blue;
+}

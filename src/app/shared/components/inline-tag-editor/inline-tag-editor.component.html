@@ -1,0 +1,233 @@
+<ng-template #tagHoverContent>
+  <div class="h-100 w-100" (mouseleave)="closePopovers()">
+    <p *ngFor="let tag of flatTags">{{ tag.name }}</p>
+  </div>
+</ng-template>
+
+<div
+  *ngIf="!editMode && initialSelectionSet"
+  #p="taPopover"
+  triggers="'manual'"
+  placement="bottom"
+  [taPopover]="tagHoverContent"
+  [autoClose]="false"
+  [disablePopover]="!truncated"
+  popoverClass="tag-pop-content"
+  (mouseenter)="triggerPopover(p)"
+  class="tag-hover"
+>
+  <span
+    *ngIf="columnText"
+    [class.tag-item]="flatTags.length < 1"
+    class="d-inline tag-name"
+  >
+    {{ columnText }}
+  </span>
+  <ta-icon
+    (click)="toggleEditMode(true)"
+    icon="edit"
+    class="edit-icon d-inline-flex float-right"
+  >
+  </ta-icon>
+</div>
+<div *ngIf="editMode && initialSelectionSet" (click)="prevent($event)">
+  <div
+    taDropdown
+    #dropdown="taDropdown"
+    [style.width]="'250px'"
+    autoClose="false"
+  >
+    <div taDropdownToggle class="tag-hover">
+      <span [class.tag-item]="flatTags.length < 1" class="d-inline tag-name">
+        <strong>{{ columnText }}</strong>
+      </span>
+      <ta-icon
+        icon="edit"
+        class="edit-icon d-inline-flex float-right selected-edit"
+      >
+      </ta-icon>
+    </div>
+    <div taDropdownMenu class="tag-pop-content w-100">
+      <div *ngIf="selectedTagGroup.id" class="tag-pop-title">
+        <h3>
+          <ta-icon icon="arrow-left" height="10" (click)="navigateBack()">
+          </ta-icon>
+          {{ selectedTagGroup.tagGroupName || selectedTagGroup.tag }}
+        </h3>
+      </div>
+      <ta-dropdown-search (onSearch)="onSearch($event)"> </ta-dropdown-search>
+      <div class="dropdown-menu-items" [class.contract]="selectedTagGroup.id">
+        <div *ngIf="!selectedTagGroup.id">
+          <div
+            *ngFor="
+              let tagGroup of currentStateTree
+                | searchFilter: searchTerm:'tagGroupName'
+            "
+            class="dropdown-menu-item text-truncate"
+            (click)="selectChildren($event, tagGroup)"
+          >
+            <ta-checkbox
+              *ngIf="tagGroup.multipleValuesAllowed"
+              (click)="selectAllChildren($event, tagGroup)"
+              [checked]="isAllChildrenSelected(tagGroup)"
+              [indeterminate]="isIndeterminate(tagGroup)"
+            >
+              {{ tagGroup.tagGroupName }}
+            </ta-checkbox>
+            <div *ngIf="!tagGroup.multipleValuesAllowed">
+              {{ tagGroup.tagGroupName }}
+            </div>
+            <ta-icon icon="caret-right" height="10"></ta-icon>
+          </div>
+        </div>
+        <div *ngIf="selectedTagGroup.id">
+          <div [ngSwitch]="selectedTagGroup.tagGroupType">
+            <ng-template *ngSwitchCase="'TEXT'" [ngTemplateOutlet]="textTag">
+            </ng-template>
+            <ng-template
+              *ngSwitchCase="'SELECTABLE'"
+              [ngTemplateOutlet]="selectableTag"
+            >
+            </ng-template>
+            <ng-template
+              *ngSwitchCase="'USER'"
+              [ngTemplateOutlet]="userTagsTemplate"
+            >
+            </ng-template>
+            <ng-template *ngSwitchDefault [ngTemplateOutlet]="selectableTag">
+            </ng-template>
+          </div>
+        </div>
+      </div>
+
+      <hr />
+      <div class="action-buttons d-flex flex-row justify-content-end">
+        <button taButton taType="flat" class="mr-1 btn-sm" (click)="onCancel()">
+          Cancel
+        </button>
+        <button
+          taButton
+          taType="primary"
+          class="mr-1 btn-sm"
+          (click)="onSave()"
+        >
+          Save
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #textTag>
+  <div class="p-1">
+    <p>Edit text</p>
+    <div *ngIf="isTextInputUpdate(selectedTagGroup)">
+      <ng-container
+        *ngFor="let textTag of flatTags | searchFilter: searchTerm:'name'"
+      >
+        <input
+          type="text"
+          *ngIf="textTag.tagGroupId === selectedTagGroup.id"
+          class="w-100"
+          [value]="textTag.name"
+          (keyup)="onTextUpdate($event, textTag)"
+        />
+      </ng-container>
+    </div>
+    <div *ngIf="!isTextInputUpdate(selectedTagGroup)">
+      <input
+        type="text"
+        class="w-100"
+        (keyup)="onTextUpdate($event, { tag: selectedTagGroup.name }, true)"
+      />
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #userTagsTemplate>
+  <div class="p-1" *ngIf="!selectedTagGroup.multipleValuesAllowed">
+    <button
+      *ngFor="
+        let tag of selectedTagGroup.values | searchFilter: searchTerm:'tag'
+      "
+      class="dropdown-menu-item text-truncate"
+      [class.selected]="tag.selected === true"
+      (click)="secondLevelClick($event, tag, selectedTagGroup, dropdown)"
+    >
+      {{ tag.tag }}
+    </button>
+  </div>
+  <div *ngIf="selectedTagGroup.multipleValuesAllowed">
+    <ta-checkbox
+      class="dropdown-item"
+      (click)="selectAllChildren($event, selectedTagGroup)"
+      [checked]="isAllChildrenSelected(selectedTagGroup)"
+      [indeterminate]="isIndeterminate(selectedTagGroup)"
+    >
+      Select All ({{ getSelectUsersCount() }} of
+      {{ selectedTagGroup.values.length }})
+    </ta-checkbox>
+    <ta-checkbox
+      class="dropdown-menu-item text-truncate"
+      *ngFor="
+        let tag of selectedTagGroup.values | searchFilter: searchTerm:'tag'
+      "
+      (click)="onSelect(tag, selectedTagGroup)"
+      [checked]="tag.selected"
+    >
+      {{ tag.tag }}
+    </ta-checkbox>
+  </div>
+</ng-template>
+
+<ng-template #selectableTag>
+  <div class="p-1" *ngIf="!selectedTagGroup.multipleValuesAllowed">
+    <button
+      *ngFor="
+        let tag of selectedTagGroup.values || selectedTagGroup.children
+          | searchFilter: searchTerm:'tag'
+      "
+      class="dropdown-menu-item text-truncate"
+      [class.selected]="tag.selected === true"
+      (click)="secondLevelClick($event, tag, selectedTagGroup, dropdown)"
+    >
+      {{ tag.tag }}
+      <ta-icon
+        *ngIf="tag.children.length"
+        icon="caret-right"
+        height="10"
+        (click)="selectChildren($event, tag)"
+      >
+      </ta-icon>
+    </button>
+  </div>
+  <div *ngIf="selectedTagGroup.multipleValuesAllowed">
+    <ta-checkbox
+      class="dropdown-item"
+      (click)="selectAllChildren($event, selectedTagGroup)"
+      [checked]="isAllChildrenSelected(selectedTagGroup)"
+      [indeterminate]="isIndeterminate(selectedTagGroup)"
+    >
+      Select All ({{ getSelectAllCount(selectedTagGroup)[0] }} of
+      {{ getSelectAllCount(selectedTagGroup)[1] }})
+    </ta-checkbox>
+    <ta-checkbox
+      class="dropdown-menu-item text-truncate"
+      *ngFor="
+        let tag of selectedTagGroup.values || selectedTagGroup.children
+          | searchFilter: searchTerm:'tag'
+      "
+      (click)="onSelect(tag, selectedTagGroup)"
+      [checked]="tag.selected"
+    >
+      {{ tag.tag }}
+      <ta-icon
+        *ngIf="tag.children.length"
+        icon="caret-right"
+        height="10"
+        (click)="selectChildren($event, tag)"
+      >
+      </ta-icon>
+    </ta-checkbox>
+  </div>
+</ng-template>

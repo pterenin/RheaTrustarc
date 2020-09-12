@@ -1,0 +1,335 @@
+<ta-page-wrapper [full]="true">
+  <h2 class="page-header d-none">My Inventory</h2>
+  <ta-table
+    indexField="id"
+    [id]="gridID"
+    [taSelected]="true"
+    [filter]="true"
+    [filterIsDirty]="isFilterDirty"
+    [filterValue]="filterValue ? filterValue : 'Filters'"
+    class="ta-table-wrapper-border"
+    [taExpandable]="true"
+    class="reindex-wrapper"
+  >
+    <!--- [i18n-tobeinternationalized] -->
+    <ta-table-search
+      [taPlaceholder]="'Enter to search...'"
+      (onSearch)="onSearch($event)"
+    ></ta-table-search>
+    <ta-table-toolbar>
+      <!-- View # of rows Dropdown -->
+      <ta-view-rows-dropdown
+        [numRows]="maxRows"
+        (selectionChanged)="onChangeMax($event)"
+        class="pl-1"
+      >
+      </ta-view-rows-dropdown>
+
+      <button
+        taButton
+        type="button"
+        taType="circle"
+        taTooltip="Refresh"
+        (click)="refreshData()"
+        class="mr-1"
+        id="record-datagrid-icon-refresh"
+      >
+        <ta-icon icon="refresh"></ta-icon>
+      </button>
+
+      <button
+        id="di-record-icon-edit"
+        taButton
+        type="button"
+        taType="circle"
+        taTooltip="Edit"
+        class="mr-1"
+        (click)="edit()"
+        [disabled]="!(totalSelectedItems() === 1)"
+      >
+        <ta-icon icon="edit"></ta-icon>
+      </button>
+      <div taDropdown class="d-inline-block ml-1 " placement="bottom-right">
+        <button
+          taButton
+          class="mr-1"
+          taType="circle"
+          id="downloadDropdown"
+          taDropdownToggle
+          taTooltip="Export .CSV"
+          type="button"
+          [disabled]="!(tableData.length > 0)"
+        >
+          <ta-icon icon="download"></ta-icon>
+        </button>
+        <!--- [i18n-tobeinternationalized] -->
+        <div taDropdownMenu aria-labelledby="downloadDropdown">
+          <button
+            id="di-record-icon-download-all"
+            class="dropdown-item ml-0"
+            type="button"
+            (click)="downloadAll()"
+          >
+            Download All Records
+          </button>
+          <button
+            id="di-record-icon-download-selected"
+            class="dropdown-item ml-0"
+            type="button"
+            (click)="downloadSelected()"
+            [disabled]="downloadSelectedBtnDisabled"
+          >
+            Download Selected
+          </button>
+        </div>
+      </div>
+      <button
+        id="di-record-icon-delete"
+        taButton
+        type="button"
+        taType="circle"
+        class="mr-1 ml-1"
+        taTooltip="Delete"
+        (click)="delete()"
+        [disabled]="deleteBtnDisabled"
+      >
+        <ta-icon icon="delete"></ta-icon>
+      </button>
+      <div taDropdown class="d-inline-block ml-1" placement="bottom-right">
+        <button
+          taButton
+          type="button"
+          class="mr-1 ml-1"
+          taType="primary"
+          id="addDropdown"
+          taDropdownToggle
+          placement="top-left"
+          taTooltip="Add"
+        >
+          Add New
+        </button>
+        <!--- [i18n-tobeinternationalized] -->
+        <div taDropdownMenu aria-labelledby="addDropdown">
+          <a class="dropdown-item" (click)="newThirdParty()">New Third Party</a>
+          <a class="dropdown-item" (click)="newITSystem()">New System</a>
+          <a class="dropdown-item" (click)="newCompanyAffiliate()"
+            >New Company Affiliate</a
+          >
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" (click)="openImportModal()">Import Data</a>
+        </div>
+      </div>
+    </ta-table-toolbar>
+    <ta-table-filter>
+      <ta-custom-filters
+        (applyFiltersEvent)="applyFilters($event)"
+        (applyFilterName)="updateFilterValue($event)"
+        [customFilters]="customFilters"
+        recordType="INV_ALL"
+      >
+      </ta-custom-filters>
+    </ta-table-filter>
+    <ta-table-column taField="name" id="di-name">Name</ta-table-column>
+    <!--- [i18n-tobeinternationalized] -->
+    <ta-table-column taField="entityType" id="di-type">Type</ta-table-column>
+    <!--- [i18n-tobeinternationalized] -->
+    <ta-table-column taField="identifier" id="di-id" [taWidth]="120"
+      >ID#</ta-table-column
+    >
+    <!--- [i18n-tobeinternationalized] -->
+    <ta-table-column taField="linkedBPCount" id="di-bp" [taWidth]="160"
+      >Business Processes</ta-table-column
+    >
+    <!--- [i18n-tobeinternationalized] -->
+    <ta-table-column taField="contact.fullName" id="di-contact" [taWidth]="120"
+      >Contact</ta-table-column
+    >
+    <!--- [i18n-tobeinternationalized] -->
+    <ta-table-column taField="lastModified" id="di-last-updated">
+      Last Updated
+    </ta-table-column>
+    <!--- [i18n-tobeinternationalized] -->
+    <ta-table-column
+      *ngIf="isOldSRiskIndicatorEnabled()"
+      taField="riskLevel"
+      id="di-risk-level"
+      >Risk</ta-table-column
+    >
+    <ta-table-column
+      taField="currentRiskIndicator"
+      id="di-risk-level"
+      *ngIf="isTrafficLightEnabled()"
+      >Risk</ta-table-column
+    >
+    <!--- [i18n-tobeinternationalized] -->
+    <ta-table-column class="ta-table-cell-tools"></ta-table-column>
+    <ng-container *ngIf="!isFetching">
+      <ta-table-row
+        *ngFor="let item of tableData; index as i"
+        [taItem]="item"
+        [attr.id]="'di-record-' + i"
+      >
+        <ta-table-cell class="data-inventory-name">
+          <div
+            class="text-truncate item-name link"
+            (click)="onEditItem(item)"
+            placement="top-left"
+            tooltipTextAlign="justify"
+            [taTooltip]="item.name"
+          >
+            {{ item.name }}
+          </div>
+        </ta-table-cell>
+        <ta-table-row-detail>
+          <div class="d-flex">
+            <!--- [i18n-tobelocalized] -->
+            <div class="description-header">Description</div>
+            <div class="description text-break">{{ item.description }}</div>
+          </div>
+        </ta-table-row-detail>
+        <ta-table-cell class="tags-container">
+          <ta-tags [theme]="getTypeTheme(item.entityType)">
+            {{ getRecordTypeLabel(item.entityType, item.name) }}
+          </ta-tags>
+        </ta-table-cell>
+        <ta-table-cell>{{ item.identifier }}</ta-table-cell>
+        <ta-table-cell *ngIf="!exists(item.linkedBPCount)">--</ta-table-cell>
+        <ta-table-cell *ngIf="item.linkedBPCount === 0">0</ta-table-cell>
+        <ta-table-cell *ngIf="item.linkedBPCount > 0">
+          <div
+            [taPopover]="popContent"
+            [popoverTitle]="popTitle"
+            placement="right"
+            container="body"
+            (click)="$event.stopPropagation()"
+            class="d-inline-block"
+          >
+            {{ item.linkedBPCount }}
+          </div>
+        </ta-table-cell>
+        <ng-template #popTitle>
+          <!--- [i18n-tobeinternationalized] -->
+          <p>Business Processes</p>
+        </ng-template>
+        <ng-template #popContent>
+          <div class="bp-popover-body">
+            <div *ngFor="let bp of item.linkedBPs; index as i">
+              <span>{{ i + 1 }}. </span>
+              <span (click)="showBusinessProcess(bp)" class="bp-name">
+                {{ bp.name }}
+              </span>
+            </div>
+          </div>
+        </ng-template>
+        <ta-table-cell
+          class="text-truncate"
+          placement="top-left"
+          tooltipTextAlign="justify"
+          [taTooltip]="item.owner.fullName"
+          >{{ item.owner.fullName }}
+        </ta-table-cell>
+        <ta-table-cell>{{
+          item.lastModified | date: 'MM-dd-yyyy hh:mm a'
+        }}</ta-table-cell>
+        <ta-table-cell
+          *ngIf="getRiskEnabled()"
+          [taWidth]="340"
+          class="risk-column"
+        >
+          <div
+            #p="taPopover"
+            [taPopover]="popContent"
+            [disablePopover]="isRiskPopoverDisabled(item)"
+            triggers="manual"
+            placement="bottom-left"
+            container="body"
+            (mouseenter)="triggerRiskPopover(p, item.entityType)"
+            class="d-inline-block"
+          >
+            <ta-risk-indicator
+              *ngIf="!riskStatus || !riskStatus.riskService"
+              [risk]="getRisk(item)"
+            ></ta-risk-indicator>
+
+            <ta-traffic-risk-indicator
+              [riskItem]="item"
+              *ngIf="isRiskColumnVisible(item)"
+            ></ta-traffic-risk-indicator>
+            <span
+              *ngIf="
+                !isRiskColumnVisible(item) &&
+                riskStatus &&
+                riskStatus.riskService
+              "
+              >--</span
+            >
+          </div>
+        </ta-table-cell>
+        <ng-template #popContent>
+          <div class="risk-popover-body">
+            <!--- [i18n-tobeinternationalized] -->
+            <div (click)="onRiskItem(item)">Review and take action</div>
+          </div>
+        </ng-template>
+        <ta-table-cell class="ta-table-cell-tools">
+          <div taDropdown class="d-inline-block" placement="bottom-right">
+            <a
+              class="dropdown-toggle"
+              href="#"
+              (click)="$event.preventDefault()"
+              role="button"
+              id="dropdownBasic{{ i }}"
+              taDropdownToggle
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false"
+            >
+              <ta-icon icon="more" height="10"></ta-icon>
+            </a>
+            <div taDropdownMenu>
+              <button
+                *ngIf="item.entityType !== 'PRIMARY_ENTITY'"
+                type="button"
+                class="dropdown-item"
+                (click)="cloneRecord(item)"
+              >
+                Clone
+              </button>
+              <button
+                type="button"
+                class="dropdown-item"
+                (click)="onEditItem(item)"
+              >
+                Edit
+              </button>
+              <!--- [i18n-tobeinternationalized] -->
+              <button
+                type="button"
+                class="dropdown-item"
+                (click)="deleteRecord(item)"
+              >
+                Delete
+              </button>
+              <!--- [i18n-tobeinternationalized] -->
+            </div>
+          </div>
+        </ta-table-cell>
+      </ta-table-row>
+    </ng-container>
+
+    <ta-table-footer>
+      <ta-pagination
+        *ngIf="tableData.length > 0"
+        [collectionSize]="totalRows"
+        [boundaryLinks]="true"
+        [pageSize]="maxRows"
+        [page]="page"
+        [maxSize]="1"
+        [ellipses]="true"
+        showingType="full"
+        (pageChange)="onChangePage($event)"
+        (onChangePageSize)="onChangeMax($event)"
+      ></ta-pagination>
+    </ta-table-footer>
+  </ta-table>
+</ta-page-wrapper>

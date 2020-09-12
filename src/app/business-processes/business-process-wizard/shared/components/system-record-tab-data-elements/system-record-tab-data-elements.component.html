@@ -1,0 +1,223 @@
+<div class="animated fadeIn" *ngIf="!isReady">
+  <span class="spinner-border spinner-border-sm ml-auto text-primary"></span>
+</div>
+<div class="animated fadeIn" *ngIf="isReady">
+  <div class="d-flex align-items-center">
+    <ta-search-field
+      class="mr-auto w-100 d-block"
+      placeholder="Search Data Elements by Data Element"
+      (searchValue)="onSearch($event)"
+    ></ta-search-field>
+
+    <!-- [i18n-tobeinternationalized] -->
+    <ta-selected-system-record-filter
+      (applyClick)="applyFilterForm()"
+      (clearClick)="resetFilterForm()"
+      headerTitle="Filter by Category ({{ filterChecked?.length || 0 }})"
+      [isDirty]="isFiltersDirty()"
+    >
+      <form [formGroup]="filterForm" class="py-2">
+        <div
+          formArrayName="filters"
+          *ngFor="let item of filters.controls; let i = index"
+        >
+          <div [formGroupName]="i.toString()">
+            <ta-checkbox
+              formControlName="checked"
+              class="dropdown-item text-wrap px-3"
+            >
+              {{ item.get('name').value }}
+            </ta-checkbox>
+          </div>
+        </div>
+      </form>
+    </ta-selected-system-record-filter>
+  </div>
+
+  <ng-container *ngIf="type === 'withDataFlow'">
+    <ng-container>
+      <!-- Summary Info -->
+      <div
+        class="d-flex align-items-center pt-4 pb-2 position-sticky"
+        style="top: 35px; z-index: 3"
+      >
+        <div
+          class="tab-main-content cursor-pointer"
+          (click)="isCollapsedAttached = !isCollapsedAttached"
+        >
+          <h3 class="h6 m-0">
+            <!-- [i18n-tobeinternationalized] -->
+            Data Elements on System record ({{
+              getSelectedCountByGridId(gridIdAttached)
+            }}/{{ dataElementsProcessed?.length }})
+          </h3>
+          <p class="text-black-50 m-0">
+            <!-- [i18n-tobeinternationalized] -->
+            Deselect data elements that do not send information to this System
+            in this business process record.
+          </p>
+        </div>
+        <button
+          class="ml-auto"
+          taButton
+          taType="circle"
+          *ngIf="dataElementsProcessed"
+          (click)="isCollapsedAttached = !isCollapsedAttached"
+        >
+          <ta-icon
+            [icon]="isCollapsedAttached ? 'chevron-down' : 'chevron-up'"
+          ></ta-icon>
+        </button>
+      </div>
+
+      <!-- List of attached data elements -->
+      <div [class.d-none]="isCollapsedAttached">
+        <ta-table
+          [taSelected]="true"
+          [id]="gridIdAttached"
+          [serverProcess]="false"
+          class="minimal mt-2 mb-4"
+        >
+          <ta-table-column>Data Element</ta-table-column>
+          <ta-table-column>Category</ta-table-column>
+          <ta-table-row
+            *ngFor="
+              let d of dataElementsProcessed
+                | searchBy: { dataElement: searchValue }:false
+                | filterByIncludeArrayAndPath
+                  : filterCheckedCategories
+                  : 'category';
+              index as i
+            "
+            [taItem]="d"
+            [taSelected]="determineSelected(d.id)"
+          >
+            <ta-table-cell [taTruncate]="true">
+              {{ d.dataElement }}
+            </ta-table-cell>
+            <ta-table-cell [taTruncate]="true">
+              {{ d.category }}
+            </ta-table-cell>
+          </ta-table-row>
+        </ta-table>
+      </div>
+    </ng-container>
+  </ng-container>
+
+  <ng-container *ngIf="type === 'withDataFlow' && dataAvailable">
+    <ng-container
+      *ngIf="
+        dataElementsAvailable
+          | filterOutByArrayAndPropertyPipe
+            : dataElementsProcessedIds
+            : 'id' as resultDataElementsAvailable
+      "
+    >
+      <!-- Summary Info -->
+      <div
+        class="d-flex align-items-center pt-4 pb-2 position-sticky"
+        style="top: 35px; z-index: 3"
+        *ngIf="dataAvailable"
+      >
+        <div
+          class="tab-main-content cursor-pointer"
+          (click)="isCollapsedAdditional = !isCollapsedAdditional"
+        >
+          <h3 class="h6 m-0">
+            <!-- [i18n-tobeinternationalized] -->
+            Additional Data Elements ({{
+              getSelectedCountByGridId(gridIdAvailable)
+            }}/{{ resultDataElementsAvailable?.length }})
+          </h3>
+          <p class="text-black-50 m-0">
+            <!-- [i18n-tobeinternationalized] -->
+            Select any additional data elements that send information to this
+            System in this business process record.
+          </p>
+        </div>
+        <button
+          class="ml-auto"
+          taButton
+          taType="circle"
+          (click)="isCollapsedAdditional = !isCollapsedAdditional"
+        >
+          <ta-icon
+            [icon]="isCollapsedAdditional ? 'chevron-down' : 'chevron-up'"
+          ></ta-icon>
+        </button>
+      </div>
+
+      <!-- List of available data elements -->
+      <div [class.d-none]="isCollapsedAdditional">
+        <ta-table
+          [taSelected]="true"
+          [id]="gridIdAvailable"
+          [serverProcess]="false"
+          class="minimal mt-2 mb-4"
+        >
+          <ta-table-column>Data Element</ta-table-column>
+          <ta-table-column>Category</ta-table-column>
+          <ta-table-row
+            *ngFor="
+              let d of resultDataElementsAvailable
+                | searchBy: { dataElement: searchValue }:false
+                | filterByIncludeArrayAndPath
+                  : filterCheckedCategories
+                  : 'category';
+              index as i
+            "
+            [taItem]="d"
+          >
+            <ta-table-cell [taTruncate]="true">
+              {{ d.dataElement }}
+            </ta-table-cell>
+            <ta-table-cell [taTruncate]="true">
+              {{ d.category }}
+            </ta-table-cell>
+          </ta-table-row>
+        </ta-table>
+      </div>
+    </ng-container>
+  </ng-container>
+
+  <ng-container *ngIf="itSystemReadOnly">
+    <!-- Summary Info -->
+    <div
+      class="d-flex align-items-center pt-4 pb-2 position-sticky"
+      style="top: 35px; z-index: 3"
+    >
+      <div
+        class="tab-main-content cursor-pointer"
+        (click)="isCollapsedAttached = !isCollapsedAttached"
+      >
+        <h3 class="h6 m-0">
+          <!-- [i18n-tobeinternationalized] -->
+          Data Elements on System record ({{ itSystemReadOnly?.length }})
+        </h3>
+      </div>
+    </div>
+    <ta-table
+      [id]="gridIdSystemReadOnly"
+      [serverProcess]="false"
+      class="minimal mt-2 mb-4 table-system-read-only"
+    >
+      <ta-table-column>Data Element</ta-table-column>
+      <ta-table-column>Category</ta-table-column>
+      <ta-table-row
+        *ngFor="
+          let d of itSystemReadOnly
+            | searchBy: { dataElement: searchValue }:false
+            | filterByIncludeArrayAndPath: filterCheckedCategories:'category';
+          index as i
+        "
+      >
+        <ta-table-cell [taTruncate]="true">
+          {{ d.dataElement }}
+        </ta-table-cell>
+        <ta-table-cell [taTruncate]="true">
+          {{ d.category }}
+        </ta-table-cell>
+      </ta-table-row>
+    </ta-table>
+  </ng-container>
+</div>

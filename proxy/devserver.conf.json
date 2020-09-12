@@ -1,0 +1,11 @@
+{
+  "/api": {
+    "target": "http://rhea-qa.devqa.trustarc-svc.net/api/",
+    "secure": false,
+    "pathRewrite": {
+      "^/api": ""
+    },
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}

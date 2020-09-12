@@ -1,0 +1,37 @@
+@import 'variables';
+@import '../../../../../styles/record-details';
+
+:host {
+  ta-icon {
+    display: inline-block;
+    width: 20px;
+  }
+
+  .link {
+    cursor: pointer;
+    color: $nice-blue;
+  }
+
+  .foat-left {
+    float: left;
+  }
+
+  .tooltip-content {
+    strong {
+      width: 100;
+    }
+
+    span {
+      display: block;
+      margin-bottom: 10px;
+    }
+  }
+
+  .add-new-location-link {
+    display: inline-block;
+    margin-left: 5px;
+  }
+
+  .font-color-default {
+  }
+}

@@ -1,0 +1,33 @@
+@import '../../../../../styles/_variables.scss';
+
+.mapContainer {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: $border-radius;
+  border: $border-default;
+  min-height: 861px;
+}
+
+.flowchartLegends {
+  width: 100%;
+  margin-top: 24px;
+  text-align: center;
+  margin-left: 13px;
+
+  .legendItem {
+    color: $black;
+    padding-right: 16px;
+
+    span {
+      line-height: 15px;
+      font-weight: 500;
+    }
+
+    .legendColor {
+      width: 16px;
+      height: 16px;
+      margin-right: 8px;
+    }
+  }
+}

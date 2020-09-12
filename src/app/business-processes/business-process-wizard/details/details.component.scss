@@ -1,0 +1,17 @@
+ta-details {
+  display: block;
+  .details-wrapper {
+    min-height: calc(100vh - 72px);
+    overflow: visible;
+    .card {
+      position: inherit;
+    }
+  }
+
+  .owning-organization-wrapper {
+    margin-top: 24px;
+    overflow: visible;
+    min-height: 350px;
+    margin-bottom: 58px;
+  }
+}

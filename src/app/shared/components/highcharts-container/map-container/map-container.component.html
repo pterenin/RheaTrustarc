@@ -1,0 +1,26 @@
+<highcharts-chart
+  id="mapChartContainer"
+  class="mapContainer"
+></highcharts-chart>
+<div
+  class="flowchartLegends d-flex flex-wrap align-items-center justify-content-center"
+>
+  <ng-container *ngFor="let entity of Entities">
+    <div class="legendItem  d-inline-flex">
+      <span
+        class="legendColor  align-middle"
+        [ngStyle]="{ 'background-color': entity.value.color }"
+      >
+      </span>
+      <span class="align-middle">{{ entity.value.name }}</span>
+    </div>
+  </ng-container>
+  <div class="legendItem  d-inline-flex">
+    <span
+      class="legendColor align-middle"
+      [ngStyle]="{ 'background-color': multiEntity.color }"
+    >
+    </span>
+    <span class="align-middle">{{ multiEntity.value }}</span>
+  </div>
+</div>

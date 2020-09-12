@@ -1,0 +1,10 @@
+<ta-page-wrapper [full]="true">
+  <h2 class="page-header d-none">All Business Processes</h2>
+  <ta-record-datagrid
+    emptyCTAText="Add New Business Process Record"
+    (emptyCTAClick)="emptyRecordsCTAClick()"
+    [cloneRecordService]="cloneRecordService.bind(this)"
+    [recordType]="'BusinessProcess'"
+    [gridId]="dataGridId">
+  </ta-record-datagrid>
+</ta-page-wrapper>
